@@ -22,3 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "ComposePlugin"
 include ':app'
 include ':plugin-core'
+include ':plugin-api'
+include ':plugintest'
