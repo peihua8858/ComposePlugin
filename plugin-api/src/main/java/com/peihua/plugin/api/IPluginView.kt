@@ -5,5 +5,6 @@ import androidx.compose.ui.platform.ComposeView
 
 interface IPluginView {
     fun pluginView(context: Context): ComposeView
+    val newPluginView: Context.() -> ComposeView
     val pluginView: (Context.(String) -> ComposeView)
 }
