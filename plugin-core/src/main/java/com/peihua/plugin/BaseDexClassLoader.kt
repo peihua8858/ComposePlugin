@@ -38,7 +38,11 @@ internal open class BaseDexClassLoader(
     }
 
     public override fun loadClass(name: String?, resolve: Boolean): Class<*>? {
-        return super.loadClass(name, resolve)
+        try {
+            return super.loadClass(name, resolve)
+        } catch (e: Exception) {
+            return null
+        }
     }
 
     public override fun definePackage(

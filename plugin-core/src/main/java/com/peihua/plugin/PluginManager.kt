@@ -38,10 +38,6 @@ class PluginManager {
             PluginClassLoader.loadPlugin(context, pluginApkFile, context.classLoader)
     }
 
-    suspend fun mergeDexElement(context: Context): Boolean {
-        return pluginClassLoader?.mergeDexElement(context.classLoader) == true
-    }
-
     private fun findPluginView(context: Context) {
         // 1、查找实现IPluginView的类
         //扫描所有实现 IPluginView 的类
@@ -66,8 +62,8 @@ class PluginManager {
         return null
     }
 
-    suspend fun <T : IPluginView> findPlugin(context: Context, clazz: Class<T>): T? {
-        val clazz = findPluginClass(context, clazz)
+    suspend fun <T : IPluginView> findPlugin(clazz: Class<T>): T? {
+        val clazz = findPluginClass(clazz)
         try {
             if (clazz != null) {
                 return clazz.newInstance()
@@ -78,7 +74,7 @@ class PluginManager {
         return null
     }
 
-    suspend fun <T : IPluginView> findPluginClass(context: Context, clazz: Class<T>): Class<T>? {
+    suspend fun <T : IPluginView> findPluginClass(clazz: Class<T>): Class<T>? {
         try {
             if (pluginClassLoader == null) {
                 println("pluginClassLoader is null")

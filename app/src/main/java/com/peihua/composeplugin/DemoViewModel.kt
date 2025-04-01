@@ -26,34 +26,34 @@ class DemoViewModel(app: Application) : AndroidViewModel(app) {
                 val pluginPath = File(filesDir?.absolutePath, PLUGIN_PATH)
                 val apkFile = File(pluginPath, "plugintest-debug.apk")
                 PluginManager.getInstance().loadPlugin(context, apkFile.absolutePath)
-                PluginManager.getInstance().mergeDexElement(context)
+//                PluginManager.getInstance().mergeDexElement(context)
 
-                val composeViewProxyClass = PluginManager.getInstance().loadClass("com.peihua.plugin.test.PluginViewImpl")
-                composeViewProxyClass?.let { proxyClass ->
-                    val getPluginViewMethod = proxyClass.getDeclaredMethod("getPluginView")
-                    val obj = proxyClass.newInstance()
-                    pluginView5.value = getPluginViewMethod.invoke(obj) as (Context.(String) -> ComposeView)
-                    val getPluginViewMethod1 = proxyClass.getDeclaredMethod("getNewPluginView")
-                    pluginView6.value = getPluginViewMethod1.invoke(obj) as (Context.() -> ComposeView)
-                }
+//                val composeViewProxyClass = PluginManager.getInstance().loadClass("com.peihua.plugin.test.PluginViewImpl")
+//                composeViewProxyClass?.let { proxyClass ->
+//                    val getPluginViewMethod = proxyClass.getDeclaredMethod("getPluginView")
+//                    val obj = proxyClass.newInstance()
+//                    pluginView5.value = getPluginViewMethod.invoke(obj) as (Context.(String) -> ComposeView)
+//                    val getPluginViewMethod1 = proxyClass.getDeclaredMethod("getNewPluginView")
+//                    pluginView6.value = getPluginViewMethod1.invoke(obj) as (Context.() -> ComposeView)
+//                }
 
 
-                val pluginView = PluginManager.getInstance().pluginView
+//                val pluginView = PluginManager.getInstance().pluginView
                 val pluginView2: IPluginView? =
-                    PluginManager.getInstance().findPlugin(context,IPluginView::class.java)
-                if (pluginView != null) {
-                    mPluginView4.value = pluginView
-                    mPluginView3.value = { context: Context -> pluginView.pluginView(context) }
-                    mPluginView = pluginView
-                }
+                    PluginManager.getInstance().findPlugin(IPluginView::class.java)
+//                if (pluginView != null) {
+//                    mPluginView4.value = pluginView
+//                    mPluginView3.value = { context: Context -> pluginView.pluginView(context) }
+//                    mPluginView = pluginView
+//                }
                 if (pluginView2 != null) {
                     mPluginView2 = pluginView2
                 }
-                println("pluginView: $pluginView")
+//                println("pluginView: $pluginView")
                 println("mPluginView: $mPluginView")
                 println("mPluginView4: ${mPluginView4.value} ")
                 println("pluginView2: $pluginView2")
-                callback(pluginView)
+//                callback(pluginView)
             } catch (e: Exception) {
                 e.printStackTrace()
                 callback(null)
