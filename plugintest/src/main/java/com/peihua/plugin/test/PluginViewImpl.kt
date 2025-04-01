@@ -3,7 +3,6 @@ package com.peihua.plugin.test
 import android.content.Context
 import androidx.compose.ui.platform.ComposeView
 import com.peihua.plugin.api.IPluginView
-
 class PluginViewImpl : IPluginView {
     override fun pluginView(context: Context): ComposeView = ComposeView(context).apply {
         print("pluginView: ,<<<<>>>>>??111$this")

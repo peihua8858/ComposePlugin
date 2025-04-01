@@ -1,4 +1,4 @@
 
--keep class * extends com.peihua.plugin.api.IPluginView{
+-keep class * implements com.peihua.plugin.api.IPluginView{
     *;
 }

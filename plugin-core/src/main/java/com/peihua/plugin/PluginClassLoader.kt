@@ -18,6 +18,7 @@ internal class PluginClassLoader(
     parent
 ) {
     private var dexElements: Array<*>? = null
+    private  val dexFiles = arrayListOf<DexFile>()
     override fun loadClass(name: String?): Class<*>? {
         var clazz = super.loadClass(name)
         if (clazz == null) {
@@ -161,24 +162,40 @@ internal class PluginClassLoader(
         }
     }
 
+
     suspend fun <T> findClassImpl(clazz: Class<T>): List<Class<T>> {
-        val returnClassList = mutableListOf<Class<T>>() // 返回\
-        if (dexElements.isNullOrEmpty()) {
-            mergeDexElement(specialClassLoader)
-        }
-        dexElements?.let { pluginDexElements ->
-            for ((index, item) in pluginDexElements.withIndex()) {
-                val dexFileField = item?.javaClass?.getDeclaredField("dexFile")
-                dexFileField?.isAccessible = true
-                val dexFile = dexFileField?.get(item) as DexFile
-                val enumeration = dexFile.entries()
-                while (enumeration.hasMoreElements()) {
-                    val className = enumeration.nextElement() as String
-                    checkClass(clazz, className, returnClassList)
+        val returnClassList = mutableListOf<Class<T>>()
+        if (dexFiles.isEmpty()) {
+            if (dexElements.isNullOrEmpty()) {
+                mergeDexElement(specialClassLoader)
+            }
+            dexElements?.let { pluginDexElements ->
+                for (item in pluginDexElements) {
+                    val dexFileField = item?.javaClass?.getDeclaredField("dexFile")
+                    dexFileField?.isAccessible = true
+                    val dexFile = dexFileField?.get(item) as DexFile
+                    dexFiles.add(dexFile)
+                    findClassByDexFile(dexFile, clazz, returnClassList)
                 }
+            }
+        } else {
+            dexFiles.forEach {
+                findClassByDexFile(it, clazz, returnClassList)
             }
         }
         return returnClassList
+    }
+
+   private fun <T> findClassByDexFile(
+        dexFile: DexFile,
+        clazz: Class<T>,
+        returnClassList: MutableList<Class<T>>,
+    ) {
+        val enumeration = dexFile.entries()
+        while (enumeration.hasMoreElements()) {
+            val className = enumeration.nextElement() as String
+            checkClass(clazz, className, returnClassList)
+        }
     }
 
     private fun <T> checkClass(
@@ -187,7 +204,6 @@ internal class PluginClassLoader(
         classes: MutableList<Class<T>>,
     ) {
         try {
-            println("scanClass>>>className: $className")
             val scanClass = loadClass(className)
             println("scanClass: $scanClass")
             if (clazz.isAssignableFrom(scanClass)) { // 判断是不是一个接口
