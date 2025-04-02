@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +33,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             ComposePluginTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
+                    Column(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .verticalScroll(rememberScrollState())
+                    ) {
                         val loadApkSuccess = remember { mutableStateOf<IPluginView?>(null) }
                         Greeting("Android", modifier = Modifier.clickable {
                             viewModel.loadApk(this@MainActivity) {
@@ -47,40 +52,23 @@ class MainActivity : ComponentActivity() {
                             if (pluginView1 != null) {
                                 SimpleAndroidView(
                                     factory = {
+                                        println("pluginView: >lllll33232>>>>$pluginView1")
+                                        val result = pluginView1.pluginView(it, "ssssssssss")
                                         Log.d(
                                             "MainActivity",
-                                            "rrrr44444pluginViewqq111111: $pluginView1"
+                                            "44444pluginViewqq222222: $result"
                                         )
-                                        println("pluginView: >lllll33232>>>>")
-                                        try {
-                                            val result = pluginView1.pluginView(it,"ssssssssss")
-                                            Log.d(
-                                                "MainActivity",
-                                                "44444pluginViewqq222222: $result"
-                                            )
-                                            result
-                                        } catch (e: Exception) {
-                                            println("pluginView: ${e.stackTraceToString()}")
-                                            Log.d(
-                                                "MainActivity",
-                                                "44444pluginViewqq222222: $4444444444444ggggg"
-                                            )
-                                            TextView(this@MainActivity).apply {
-                                                text = "Hello World<><><><><><><?>"
-                                            }
-                                        }
-
-//                                        result
-//                                        TextView(this@MainActivity).apply {
-//                                            text = "Hello World<><><><><><><?>"
-//                                        }
+                                        result
                                     }
                                 )
+                                SimpleAndroidView {
+                                    pluginView1.newPluginView(it)
+                                }
+                                SimpleAndroidView {
+                                    pluginView1.pluginView.invoke(it, "999999999")
+                                }
                             }
                         }
-//                        SimpleAndroidView {
-//                          PluginViewImpl().pluginView(it)
-//                        }
                     }
                 }
             }
