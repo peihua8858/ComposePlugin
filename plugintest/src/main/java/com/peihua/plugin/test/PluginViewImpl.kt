@@ -3,6 +3,7 @@ package com.peihua.plugin.test
 import android.content.Context
 import androidx.compose.ui.platform.ComposeView
 import com.peihua.plugin.api.IPluginView
+
 class PluginViewImpl : IPluginView {
     override fun pluginView(context: Context): ComposeView = ComposeView(context).apply {
         print("pluginView: ,<<<<>>>>>??111$this")
@@ -11,6 +12,19 @@ class PluginViewImpl : IPluginView {
             PluginView()
         }
     }
+
+
+    override fun pluginView(
+        context: Context,
+        name: String,
+    ): ComposeView= ComposeView(context).apply {
+        print("pluginView: ,<<<<>>>>>??222$this")
+        setContent {
+            print("pluginView: $this")
+            PluginView2("参数是：$name")
+        }
+    }
+
 
     override val newPluginView: Context.() -> ComposeView = {
         print("pluginView: >>>>>$this")

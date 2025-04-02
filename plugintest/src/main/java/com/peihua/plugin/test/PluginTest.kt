@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun PluginView() {
+    println("pluginView: <<><><><><><><><>4444444")
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(top = 300.dp)) {
@@ -20,6 +21,7 @@ fun PluginView() {
 
 @Composable
 fun PluginView2(content: String) {
+    println("pluginView: <<><><><><><><><>555555555")
     Box(
         modifier = Modifier
             .fillMaxSize()

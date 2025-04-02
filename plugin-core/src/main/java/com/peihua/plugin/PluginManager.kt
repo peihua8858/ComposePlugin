@@ -1,8 +1,19 @@
 package com.peihua.plugin
 
 import android.content.Context
+import android.os.Environment
+import com.peihua.plugin.PluginManager.Companion.PLUGIN_PATH
 import com.peihua.plugin.api.IPluginView
 import java.io.File
+
+val Context.pluginFile: File
+    get() {
+        var filesDir = this.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        if (filesDir == null) {
+            filesDir = this.filesDir
+        }
+        return File(filesDir, PLUGIN_PATH)
+    }
 
 class PluginManager {
     companion object {
@@ -23,8 +34,10 @@ class PluginManager {
         }
 
     suspend fun loadPlugin(context: Context) {
-        val filesDir = context.externalCacheDir
-        val pluginPath = File(filesDir?.absolutePath, PLUGIN_PATH)
+        val pluginPath = context.pluginFile
+        if (pluginClassLoader!=null) {
+            return
+        }
         pluginClassLoader =
             PluginClassLoader.loadPlugin(
                 context,
@@ -34,21 +47,13 @@ class PluginManager {
     }
 
     suspend fun loadPlugin(context: Context, pluginApkFile: String) {
+        if (pluginClassLoader!=null) {
+            return
+        }
         pluginClassLoader =
             PluginClassLoader.loadPlugin(context, pluginApkFile, context.classLoader)
     }
 
-    private fun findPluginView(context: Context) {
-        // 1、查找实现IPluginView的类
-        //扫描所有实现 IPluginView 的类
-        val clazzList =
-            pluginClassLoader?.findLoadedPluginClass("com.peihua.plugin.api.IPluginView")
-
-        val clazz = pluginClassLoader?.loadClass("com.peihua.plugin.test.PluginViewImpl")
-
-
-        pluginClassLoader?.loadClass("com.peihua.plugin.test.PluginViewImpl")
-    }
 
     fun loadClass(className: String): Class<*>? {
         try {

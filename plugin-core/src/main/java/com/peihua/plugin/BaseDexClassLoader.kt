@@ -10,11 +10,20 @@ internal open class BaseDexClassLoader(
     parent: ClassLoader,
 ) : dalvik.system.DexClassLoader(dexPath, optimizedDirectory, librarySearchPath, parent) {
     public override fun findClass(name: String?): Class<*>? {
-        return super.findClass(name)
+        try {
+            return super.findClass(name)
+        } catch (e: Throwable) {
+           e.printStackTrace()
+            return null
+        }
     }
 
     public override fun findLibrary(name: String?): String? {
-        return super.findLibrary(name)
+        try {
+            return super.findLibrary(name)
+        } catch (e: Exception) {
+           return null
+        }
     }
 
     public override fun findResource(name: String?): java.net.URL? {
@@ -40,10 +49,11 @@ internal open class BaseDexClassLoader(
     public override fun loadClass(name: String?, resolve: Boolean): Class<*>? {
         try {
             return super.loadClass(name, resolve)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             return null
         }
     }
+
 
     public override fun definePackage(
         name: String?,

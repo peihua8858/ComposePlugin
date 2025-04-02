@@ -1,6 +1,5 @@
 package com.peihua.composeplugin
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -17,18 +16,13 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import com.peihua.composeplugin.ui.theme.ComposePluginTheme
-import com.peihua.plugin.PluginManager
-import com.peihua.plugin.PluginManager.Companion.PLUGIN_PATH
 import com.peihua.plugin.api.IPluginView
-import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,16 +42,35 @@ class MainActivity : ComponentActivity() {
                         })
 
                         if (loadApkSuccess.value != null) {
-                            val pluginView1 = viewModel.mPluginView2
+                            val pluginView1 = loadApkSuccess.value
                             Log.d("MainActivity", "444loadApk21212: $pluginView1")
                             if (pluginView1 != null) {
                                 SimpleAndroidView(
                                     factory = {
-                                        Log.d("MainActivity", "rrrr44444pluginViewqq111111: $pluginView1")
-                                        print("pluginView: >lllll33232>>>>$this")
-                                        val result = pluginView1.pluginView(it,"223334")
-                                        Log.d("MainActivity", "44444pluginViewqq222222: $result")
-                                        result
+                                        Log.d(
+                                            "MainActivity",
+                                            "rrrr44444pluginViewqq111111: $pluginView1"
+                                        )
+                                        println("pluginView: >lllll33232>>>>")
+                                        try {
+                                            val result = pluginView1.pluginView(it,"ssssssssss")
+                                            Log.d(
+                                                "MainActivity",
+                                                "44444pluginViewqq222222: $result"
+                                            )
+                                            result
+                                        } catch (e: Exception) {
+                                            println("pluginView: ${e.stackTraceToString()}")
+                                            Log.d(
+                                                "MainActivity",
+                                                "44444pluginViewqq222222: $4444444444444ggggg"
+                                            )
+                                            TextView(this@MainActivity).apply {
+                                                text = "Hello World<><><><><><><?>"
+                                            }
+                                        }
+
+//                                        result
 //                                        TextView(this@MainActivity).apply {
 //                                            text = "Hello World<><><><><><><?>"
 //                                        }
@@ -65,6 +78,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+//                        SimpleAndroidView {
+//                          PluginViewImpl().pluginView(it)
+//                        }
                     }
                 }
             }
