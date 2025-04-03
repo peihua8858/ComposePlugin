@@ -1,6 +1,7 @@
 package com.peihua.plugin
 
 import android.content.Context
+import android.content.res.Resources
 import androidx.annotation.WorkerThread
 import dalvik.system.DexFile
 import java.io.File
@@ -26,7 +27,7 @@ internal class PluginClassLoader(
 
 
     override fun loadClass(name: String?): Class<*>? {
-        var clazz = parent.loadClass(name)
+        var clazz = super.loadClass(name)
 
         return clazz
     }
@@ -52,7 +53,7 @@ internal class PluginClassLoader(
 
     companion object {
         @WorkerThread
-        fun loadPlugin(
+      internal  fun loadPlugin(
             context: Context,
             pluginApkPath: String,
             parent: ClassLoader,
@@ -65,7 +66,7 @@ internal class PluginClassLoader(
                 pluginPath.mkdirs()
             }
             if (pluginApkPath.endsWith(".apk")) {
-                return loadApk(pluginPath, pluginApkPath, parent)
+                return loadApk( pluginPath, pluginApkPath, parent)
             } else {
                 val apkFile = pluginPath.listFiles()?.find { it.endsWith(".apk") }
                 if (apkFile != null) {
@@ -165,13 +166,13 @@ internal class PluginClassLoader(
             dexElementsField.isAccessible = true
 
             // 宿主的 类加载器
-            val pathClassLoader: ClassLoader = classLoader
+//            val pathClassLoader: ClassLoader = classLoader
             // DexPathList类的对象
-            val hostPathListObj = pathListField[pathClassLoader]
+//            val hostPathListObj = pathListField[pathClassLoader]
             // 宿主的 dexElements
-            val hostDexElements = dexElementsField[hostPathListObj] as Array<*>
-            println("mergeDexElement: hostPathListObj: ${hostPathListObj}")
-            println("mergeDexElement: hostDexElements: ${hostDexElements.contentToString()}")
+//            val hostDexElements = dexElementsField[hostPathListObj] as Array<*>
+//            println("mergeDexElement: hostPathListObj: ${hostPathListObj}")
+//            println("mergeDexElement: hostDexElements: ${hostDexElements.contentToString()}")
             // 插件的 类加载器
             val dexClassLoader = pluginClassLoader
             // DexPathList类的对象
@@ -181,26 +182,26 @@ internal class PluginClassLoader(
             val pluginDexElements = dexElementsField[pluginPathListObj] as Array<*>
 
             println("mergeDexElement: pluginDexElements: ${pluginDexElements.contentToString()}")
-            val hostDexSize = hostDexElements.size
-            val pluginDexSize = pluginDexElements.size
+//            val hostDexSize = hostDexElements.size
+//            val pluginDexSize = pluginDexElements.size
             // 宿主dexElements = 宿主dexElements + 插件dexElements
             // 创建一个新数组
-            val newDexElements = hostDexElements.javaClass.componentType?.let {
-                newInstance(it, hostDexSize + pluginDexSize)
-            } as Array<*>
-            System.arraycopy(hostDexElements, 0, newDexElements, 0, hostDexSize)
-            System.arraycopy(pluginDexElements, 0, newDexElements, hostDexSize, pluginDexSize)
+//            val newDexElements = hostDexElements.javaClass.componentType?.let {
+//                newInstance(it, hostDexSize + pluginDexSize)
+//            } as Array<*>
+//            System.arraycopy(hostDexElements, 0, newDexElements, 0, hostDexSize)
+//            System.arraycopy(pluginDexElements, 0, newDexElements, hostDexSize, pluginDexSize)
 
             // 赋值 hostDexElements = newDexElements
-            dexElementsField[hostPathListObj] = newDexElements
+//            dexElementsField[hostPathListObj] = newDexElements
 //            dexElementsField[pluginPathListObj] = newDexElements
-            dexElements = newDexElements
-            println("mergeDexElement: newDexElements: ${newDexElements.size}")
-            println("mergeDexElement: hostDexElements: ${hostDexElements.size}")
+            dexElements = pluginDexElements
+//            println("mergeDexElement: newDexElements: ${newDexElements.size}")
+//            println("mergeDexElement: hostDexElements: ${hostDexElements.size}")
             println("mergeDexElement: pluginDexElements: ${pluginDexElements.size}")
-            newDexElements.forEach {
-                println("mergeDexElement: $it")
-            }
+//            newDexElements.forEach {
+//                println("mergeDexElement: $it")
+//            }
             println("mergeDexElement: success")
             return true
         } catch (e: Exception) {

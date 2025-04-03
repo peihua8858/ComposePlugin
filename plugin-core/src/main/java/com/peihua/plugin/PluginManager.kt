@@ -1,6 +1,8 @@
 package com.peihua.plugin
 
 import android.content.Context
+import android.content.ContextParams
+import android.content.res.Resources
 import android.os.Environment
 import com.peihua.plugin.PluginManager.Companion.PLUGIN_PATH
 import com.peihua.plugin.api.IPluginView
@@ -25,7 +27,7 @@ class PluginManager {
     }
 
     private var pluginClassLoader: PluginClassLoader? = null
-
+    private var pluginResources: Resources? = null
     val pluginView: IPluginView?
         get() {
             val clazz =
@@ -35,7 +37,7 @@ class PluginManager {
 
     suspend fun loadPlugin(context: Context) {
         val pluginPath = context.pluginFile
-        if (pluginClassLoader!=null) {
+        if (pluginClassLoader != null) {
             return
         }
         pluginClassLoader =
@@ -44,14 +46,16 @@ class PluginManager {
                 pluginPath.absolutePath,
                 context.classLoader
             )
+        pluginResources = CreateResourceBloc.create(pluginClassLoader?.dexPath!!, context)
     }
 
     suspend fun loadPlugin(context: Context, pluginApkFile: String) {
-        if (pluginClassLoader!=null) {
+        if (pluginClassLoader != null) {
             return
         }
         pluginClassLoader =
             PluginClassLoader.loadPlugin(context, pluginApkFile, context.classLoader)
+        pluginResources = CreateResourceBloc.create(pluginClassLoader?.dexPath!!, context)
     }
 
 
@@ -95,5 +99,15 @@ class PluginManager {
         return clazz.getMethod(methodName).invoke(clazz.newInstance(), *args)
     }
 
+    fun createPluginContext(context: Context): Context {
+        val resource = pluginResources ?: return context
+        val pluginContext = PluginContext(context)
+        pluginContext.resources = resource
+        return context
+    }
+
+    fun updataResouce(context: PluginContext?) {
+        context?.resources = MixResources(pluginResources!!, context.resources)
+    }
 
 }

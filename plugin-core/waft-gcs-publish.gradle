@@ -1,0 +1,292 @@
+apply plugin: "maven-publish"
+group = 'com.peihua.plugin'
+def serverName = "ComposePlugin"
+def apiVersion = "1.0.0.0-SNAPSHOT"
+apiVersion = getVersion(apiVersion)
+
+def apiPkgName = "com.peihua.plugin.api"
+
+task deleteBuild(type: Delete) {
+    println "deleteBuild()"
+
+    def buildDir = project.buildDir.absolutePath
+
+    delete buildDir
+}
+def archiveName
+def srcClassDir
+task makeJar(type: Jar) {
+    println "makeJar()"
+
+    archiveAppendix = serverName
+    archiveBaseName = "agcs"
+    archiveVersion = apiVersion
+    archiveClassifier = "release"
+
+//    archiveName = "${archiveBaseName}-${archiveAppendix}-${archiveVersion}-${archiveClassifier}"
+    archiveName = "agcs-${serverName}-${apiVersion}-release"
+    //需打包的资源所在的路径集
+    srcClassDir = project.buildDir.absolutePath + "/intermediates/javac/release/classes"
+    //初始化资源路径集
+    from srcClassDir
+
+    String apiPath = apiPkgName.replaceAll('\\.', '\\/')
+//    include apiSrcDir + "/**/*.class"
+    include "${apiPath}/**/*.class"
+
+    println "apiPkgName = ${apiPkgName} , apiPath = ${apiPath}"
+}
+task makeAar(type: Jar) {
+    println "makeAar()"
+    archiveAppendix = serverName
+    archiveBaseName = "agcs"
+    archiveVersion = apiVersion
+    archiveClassifier = "release"
+
+    archiveName = "agcs-${serverName}-${apiVersion}-release"
+    def targetJarPath = project.buildDir.absolutePath + "/libs/" + archiveName + ".jar"
+
+    //需打包的资源所在的路径集
+    srcClassDir = targetJarPath
+    //初始化资源路径集
+    from targetJarPath
+//
+    String apiPath = apiPkgName.replaceAll('\\.', '\\/')
+    include "${apiPath}/**/*.class"
+
+    // 复制资源
+    def resDir = file("${project.projectDir}/src/main/res")
+    include "${resDir}/**/*.*"
+//    from resDir
+// 创建 AAR 需要的输出目录
+    def aarOutputDir = new File(project.buildDir, "outputs/aar")
+    if (!aarOutputDir.exists()) {
+        aarOutputDir.mkdirs()
+    }
+    //将jar 和资源打包成 AAR
+    from makeJar.archiveFile
+    from resDir
+
+    def outputFile=new File(aarOutputDir, "${archiveBaseName.get()}-${archiveClassifier.get()}-${archiveVersion.get()}.aar")
+    //将jar 和资源复制到 AAR 输出到outputFile 中
+
+    // 设置 AAR 的输出路径
+    archiveFile.set(outputFile)
+}
+publishing {
+    publications {
+        api(MavenPublication) {
+            afterEvaluate {
+                groupId group
+                artifactId serverName + "-api"
+                version "${apiVersion}"
+
+                def targetJarPath = project.buildDir.absolutePath + "/libs/" + archiveName + ".jar"
+//                artifact(targetJarPath)
+                artifact(makeAar.archiveFile)
+                println "targetJarName = " + targetJarPath
+                println "发布成功：maven url = " + getGroupId() + ":" + getArtifactId() + ":" + getVersion()
+            }
+        }
+
+        service(MavenPublication) {
+            afterEvaluate {
+                from components.findByName('release')
+                groupId group
+                //此处不能是 artifactId serverName + "-service"，因为摩天轮已经固定是agcs_biz_lib
+                artifactId serverName
+                version "${apiVersion}"
+//                def targetAARPath = project.buildDir.absolutePath + "/outputs/aar/${archivesBaseName}-release.aar"
+//                artifact(targetAARPath)
+                println "发布成功：maven url = " + getGroupId() + ":" + getArtifactId() + ":" + getVersion()
+            }
+        }
+    }
+
+    repositories {
+        def repositoryInfo = getRepositoryInfo(apiVersion)
+        maven {
+            name = "Snapshot"
+            url = repositoryInfo.get("repository")
+            credentials {
+                username = repositoryInfo.get("username")
+                password = repositoryInfo.get("password")
+            }
+        }
+        maven {
+            name = "Release"
+            url = repositoryInfo.get("repository")
+            credentials {
+                username = repositoryInfo.get("username")
+                password = repositoryInfo.get("password")
+            }
+        }
+        maven {
+            name = "LocalFile"
+            url = uri("${rootDir}/plugin_libs")
+        }
+    }
+}
+task publishApiToMavenRelease(dependsOn: [
+        'deleteBuild',// 0
+        'assemble',// 1
+        'makeJar', // 2
+        'publishApiPublicationToReleaseRepository' // 3
+],
+        group: 'waft-gcs') {
+    println "publishApiToMavenRelease()"
+}
+
+assemble.mustRunAfter 'deleteBuild'
+makeJar.mustRunAfter 'assemble'
+makeJar.mustRunAfter 'assemble'
+publishApiPublicationToReleaseRepository.mustRunAfter 'makeJar'
+
+publishServicePublicationToReleaseRepository.mustRunAfter 'assemble'
+
+
+task publishServiceToMavenRelease(dependsOn: [
+        'deleteBuild', // 0
+        'assemble',// 1
+        'publishServicePublicationToReleaseRepository' // 2
+],
+        group: 'waft-gcs') {
+    println "publishServiceToMavenRelease()"
+}
+
+assemble.mustRunAfter 'deleteBuild'
+publishServicePublicationToReleaseRepository.mustRunAfter 'assemble'
+
+task publishAll(dependsOn: [
+        'deleteBuild',// 0
+        'assemble',// 1
+        'makeJar', // 2
+        'publishApiPublicationToReleaseRepository', // 3
+        'publishServicePublicationToReleaseRepository' //4
+],
+        group: 'waft-gcs') {
+    println "publishAll()"
+}
+task publishAllToMavenRelease(dependsOn: [
+        'deleteBuild',// 0
+        'assemble',// 1
+        'makeJar', // 2
+        'publishApiPublicationToReleaseRepository', // 3
+        'publishServicePublicationToReleaseRepository' //4
+],
+        group: 'waft-gcs') {
+    println "publishAllToMavenRelease()"
+}
+
+publishServicePublicationToReleaseRepository.mustRunAfter 'publishApiPublicationToReleaseRepository'
+
+
+def getRepositoryInfo(String version) {
+    HashMap info = new HashMap()
+
+    if (version.endsWith("-SNAPSHOT")) {
+        info.put("repository", "https://mvnrepo.alibaba-inc.com/nexus/content/repositories/snapshots")
+        info.put("username", "snapshotsAdmin")
+        info.put("password", "123456")
+    } else {
+        info.put("repository", "https://mvnrepo.alibaba-inc.com/nexus/content/repositories/releases")
+        def accountMap = getAccount()
+        info.put("username", accountMap.get("username"))
+        info.put("password", accountMap.get("password"))
+    }
+    return info
+}
+
+HashMap getAccount() {
+    HashMap accountMap = new HashMap()
+    def parsedSettingsXml
+    def settingsFile = '/home/admin/software/apache-maven-3.2.1/conf/settings.xml'
+    def defaultSettingsFile = System.getProperty("user.home") + "/.m2/settings.xml"
+    println("defaultSettingsFile: " + defaultSettingsFile)
+    if (new File(settingsFile).exists() || new File(defaultSettingsFile).exists()) {
+        if (new File(settingsFile).exists()) {
+            parsedSettingsXml = (new XmlParser()).parse(settingsFile);
+        } else if (new File(defaultSettingsFile).exists()) {
+            parsedSettingsXml = (new XmlParser()).parse(defaultSettingsFile);
+        }
+
+        parsedSettingsXml.servers[0].server.each { server ->
+            if ("releases" == server.id.text()) {
+                accountMap.put("id", server.id.text())
+                accountMap.put("username", server.username.text())
+                accountMap.put("password", server.password.text())
+            }
+        }
+    } else {
+        accountMap.put("id", "releases")
+        accountMap.put("username", "admin")
+        accountMap.put("password", "screct")
+    }
+    return accountMap
+}
+
+// 获取发布版本
+String getVersion(String localVersion) {
+    // 获取发布版本
+    def deployVersion = localVersion
+    //获取平台或者是打包脚本中的版本参数对应的要打包的版本信息
+    if (System.getenv("deployVersion") != null) {
+        deployVersion = System.getenv("deployVersion")
+    }
+    if (System.hasProperty('deployVersion')) {
+        deployVersion = System.getProperty('deployVersion')
+    }
+    if (System.getenv('MUPP_VERSION_NAME') != null) {
+        deployVersion = System.getenv('MUPP_VERSION_NAME')
+    }
+    if (System.hasProperty('MUPP_VERSION_NAME')) {
+        deployVersion = System.getProperty('MUPP_VERSION_NAME')
+    }
+    return deployVersion
+}
+
+
+task deleteLocalFile(type: Delete) {
+    def dir = project.rootDir.absolutePath + "/plugin_libs"
+    delete dir
+}
+deleteLocalFile.mustRunAfter 'deleteBuild'
+makeJar.mustRunAfter 'deleteLocalFile'
+makeAar.mustRunAfter 'makeJar'
+publishApiPublicationToLocalFileRepository.mustRunAfter 'makeAar'
+publishServicePublicationToLocalFileRepository.mustRunAfter 'publishApiPublicationToLocalFileRepository'
+
+task publishApiToMavenLocalFile(dependsOn: [
+        'deleteBuild',// 0
+        'assemble',// 1
+        'makeJar', // 2
+        makeAar,
+        'publishApiPublicationToLocalFileRepository' // 3
+],
+        group: 'waft-gcs') {
+    println "publishApi()"
+}
+task executeSh(type: Exec) {
+    commandLine "sh", "buildApp.sh"
+}
+executeSh.mustRunAfter 'publishServicePublicationToLocalFileRepository'
+task publishServiceToMavenLocalFile(dependsOn: [
+        'deleteBuild', // 0
+        'assemble',// 1
+        'publishServicePublicationToLocalFileRepository' // 2
+],
+        group: 'waft-gcs') {
+    println "publishService()"
+}
+
+task publishAllToMavenLocalFile(dependsOn: [
+        'deleteBuild',// 0
+        'deleteLocalFile',
+        'assemble',// 1
+        'makeAar', // 2
+        'publishApiPublicationToLocalFileRepository', //3
+        'publishServicePublicationToLocalFileRepository', //4
+        "executeSh"//5
+], group: 'waft-gcs') {
+    println "publishAllToMavenLocalFile()"
+}

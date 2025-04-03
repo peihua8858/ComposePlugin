@@ -23,9 +23,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import com.peihua.composeplugin.ui.theme.ComposePluginTheme
+import com.peihua.plugin.PluginContext
+import com.peihua.plugin.PluginManager
 import com.peihua.plugin.api.IPluginView
 
 class MainActivity : ComponentActivity() {
+    var mContext: PluginContext? = null
+    override fun attachBaseContext(newBase: Context?) {
+        mContext = PluginContext(newBase)
+        super.attachBaseContext(mContext)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -42,6 +50,7 @@ class MainActivity : ComponentActivity() {
                         Greeting("Android", modifier = Modifier.clickable {
                             viewModel.loadApk(this@MainActivity) {
                                 Log.d("MainActivity", "loadApk: $it")
+                                PluginManager.getInstance().updataResouce(mContext)
                                 loadApkSuccess.value = it
                             }
                         })
@@ -53,7 +62,10 @@ class MainActivity : ComponentActivity() {
                                 SimpleAndroidView(
                                     factory = {
                                         println("pluginView: >lllll33232>>>>$pluginView1")
-                                        val result = pluginView1.pluginView(it, "ssssssssss")
+                                        val result = pluginView1.pluginView(
+                                            it,
+                                            "ssssssssss"
+                                        )
                                         Log.d(
                                             "MainActivity",
                                             "44444pluginViewqq222222: $result"
@@ -62,10 +74,15 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                                 SimpleAndroidView {
-                                    pluginView1.newPluginView(it)
+                                    pluginView1.newPluginView(
+                                        it
+                                    )
                                 }
                                 SimpleAndroidView {
-                                    pluginView1.pluginView.invoke(it, "999999999")
+                                    pluginView1.pluginView.invoke(
+                                        it,
+                                        "999999999"
+                                    )
                                 }
                             }
                         }
